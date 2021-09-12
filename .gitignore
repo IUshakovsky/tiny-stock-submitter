@@ -1,0 +1,12 @@
+.DS_Store
+.vscode
+__pycache__
+env_tss/
+
+tss.log
+test*
+123rf_submit.py
+canstockphoto_submit.py
+deposit_submit.py
+dreamstime_submit.py
+tss.json
