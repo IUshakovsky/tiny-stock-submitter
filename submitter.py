@@ -207,6 +207,8 @@ class One23Submitter(Submitter):
                 if len(modal_elems) > 0:
                     modal_elems[0].click()
                 break
+            else:
+                break
              
             if not self.check_unprocessed_left():
                 break
