@@ -68,9 +68,25 @@ class Submitter():
     def submit(self) -> None:
         pass
         
-    def check_captcha(self):
-        return True
-    
+    def check_captcha(self) -> bool:
+        if self._check_captcha_rc():
+            print('\a') # beep
+            confirm = click.prompt('Captcha detected. Already solved it? Y/N')
+            if confirm == 'Y':
+                return True
+            else:
+                return False
+            
+    def _check_captcha_rc(self) -> bool:
+        iframes = self.driver.find_elements_by_xpath('/html/body/div[2]/div[2]/iframe')
+        if len(iframes) > 0:
+            title = iframes[0].get_attribute('title')
+            print(title)
+            if 'recaptcha' in title:
+                return True
+        
+        return False
+
 class CanStockSubmitter(Submitter):
     def __init__(self) -> None:
         super().__init__()
@@ -176,6 +192,9 @@ class One23Submitter(Submitter):
                 break
             
             if self.check_unprocessed_left():
+                elem_select_all = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#select-all')))
+                elem_select_all.click()
+                # elem_submit_btn = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'button#submit-draft-btn')))
                 elem_submit_btn = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button#submit-draft-btn')))
                 # elem_submit_btn = driver.find_element_by_css_selector('button#submit-draft-btn')
                 elem_submit_btn.click()
@@ -188,7 +207,7 @@ class One23Submitter(Submitter):
         ''' Remove invalid items by selecting and clicking Recycle button
         '''
         while True:
-            self.driver.get(self.start_page)
+            # self.driver.get(self.start_page)
             #check_captcha?
             WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="manage-content-grid"]')))            
             all_items = self.driver.find_elements_by_xpath('//*[@id="manage-content-grid"]')            
@@ -200,7 +219,8 @@ class One23Submitter(Submitter):
                     invalid_itmes = item.find_elements_by_xpath('./div/label/div[1][@id="green-details-complete"]')
                     if len(invalid_itmes) == 0:
                         img = item.find_element_by_xpath('./div/label/div[1]/img')
-                        img.click()
+                        ActionChains(self.driver).move_to_element(img).click(img).perform()
+                        # img.click()
                 bnt_delete = self.driver.find_element_by_xpath('//*[@id="delete-button"]')
                 bnt_delete.click()
                 modal_elems = self.driver.find_elements_by_xpath('//*[@id="delete-content-modal"]/div[2]/button[2]')
@@ -210,20 +230,25 @@ class One23Submitter(Submitter):
             else:
                 break
              
-            if not self.check_unprocessed_left():
-                break
     
     def check_unprocessed_left(self) -> bool:
-        elem_select_all = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#select-all')))
-        # driver.find_element_by_css_selector('#select-all')
-        elem_select_all.click()
+        # elem_select_all = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#select-all')))
+        # # driver.find_element_by_css_selector('#select-all')
+        # elem_select_all.click()
             
-        selected_cnt_elem = self.driver.find_element_by_xpath('//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]/b')
-        selected_cnt = selected_cnt_elem.text
-        if int(selected_cnt) == 0:
-            return False
-        else:
-            return True
+        # selected_cnt_elem = self.driver.find_element_by_xpath('//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]/b')
+        # selected_cnt = selected_cnt_elem.text
+        # if int(selected_cnt) == 0:
+        #     result = False
+        # else:
+        #     result = True
+        
+        # # Return previous unchecked state
+        # elem_select_all.click()
+        # return result
+        WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="container-content-container-box"]/div/div[2]')))            
+        items = self.driver.find_elements_by_xpath('//*[@id="manage-content-grid"]')
+        return len(items) > 0
 
         
 
