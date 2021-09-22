@@ -69,13 +69,14 @@ class Submitter():
         pass
         
     def check_captcha(self) -> bool:
-        if self._check_captcha_rc():
-            print('\a') # beep
-            confirm = click.prompt('Captcha detected. Already solved it? Y/N')
-            if confirm == 'Y':
-                return True
-            else:
-                return False
+        return True
+        # if self._check_captcha_rc():
+        #     print('\a') # beep
+        #     confirm = click.prompt('Captcha detected. Already solved it? Y/N')
+        #     if confirm == 'Y':
+        #         return True
+        #     else:
+        #         return False
             
     def _check_captcha_rc(self) -> bool:
         iframes = self.driver.find_elements_by_xpath('/html/body/div[2]/div[2]/iframe')
@@ -147,8 +148,53 @@ class DepositSubmitter(Submitter):
     def __init__(self) -> None:
         super().__init__()
         self.stock = 'depositphotos'
-        self.login_page = ''
-        self.start_page = ''
+        self.login_page = 'https://depositphotos.com/login.html'
+        self.start_page = 'https://depositphotos.com/files/unfinished.html'
+    
+    def authenticate(self, auth_data: Tuple) -> None:
+        super().authenticate(auth_data)
+        # btn_select_email = self.driver.find_element_by_xpath('//*[@id="root"]/div/main/div/div/div[2]/div[3]/div[3]/div')
+        btn_select_email = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/main/div/div/div[2]/div[3]/div[3]/div')))
+        btn_select_email.click()
+        
+        elem_uname = self.driver.find_element_by_name('username')
+        elem_uname.send_keys(auth_data[0])
+        
+        elem_passwd = self.driver.find_element_by_name('password')
+        elem_passwd.send_keys(auth_data[1]) 
+        
+        btn_log_in = self.driver.find_element_by_xpath('//*[@id="root"]/div/main/div/div/div[2]/div[2]/form/button')
+        btn_log_in.click()    
+        WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="root"]/div/main/div/div/div[1]/div[1]/div/div[1]/div[1]/a')))
+             
+        
+    def submit(self) -> None:
+        while True:
+            self.driver.get(self.start_page)
+            
+            elem_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="unfinished-editor"]/div/div/div[3]/div[1]/div/table/tbody/tr/th[1]/label/i')))
+            elem_select_all.click()
+                
+            elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
+            qty_selected = elem_qty_selected.text
+            if int(qty_selected) > 0:
+                btn_submit = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/button[1]')
+                btn_submit.click()
+                
+                # check invalid items
+                if self.check_invalid():
+                    self.delete_invalid()
+    
+    def check_invalid(self) -> bool:
+        # If some of the items remains selected after submit - they are invalid
+        WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="unfinished-editor"]/div/div/div[2]/div/button[1]')))
+        elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
+        qty_selected = elem_qty_selected.text
+        return int(qty_selected) > 0
+            
+        
+    def delete_invalid(self) -> None:
+        pass
         
 class DreamstimeSubmitter(Submitter):
     def __init__(self) -> None:
@@ -185,17 +231,23 @@ class One23Submitter(Submitter):
         '''
         while True:
             self.driver.get(self.start_page)
-            
+            WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'), '0'))
+                        
             if self.check_unprocessed_left():
                 self.delete_invalid()
             else:
                 break
             
             if self.check_unprocessed_left():
-                elem_select_all = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#select-all')))
+                WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'), '0'))
+                elem_select_all = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#select-all')))
                 elem_select_all.click()
                 # elem_submit_btn = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'button#submit-draft-btn')))
-                elem_submit_btn = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, 'button#submit-draft-btn')))
+                # elem_submit_btn = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable( (By.CSS_SELECTOR, 'button#submit-draft-btn')))
+                
+                elem_submit_btn = self.driver.find_element_by_css_selector('button#submit-draft-btn')
+                ActionChains(self.driver).move_to_element(elem_submit_btn).click(elem_submit_btn).perform()
+                
                 # elem_submit_btn = driver.find_element_by_css_selector('button#submit-draft-btn')
                 elem_submit_btn.click()
                 self.check_captcha()
