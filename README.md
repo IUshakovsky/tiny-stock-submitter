@@ -3,3 +3,4 @@ Tiny stock submitter - simple tool to submit uploaded content to microstocks usi
     Supported microstocks:
     123 - 123rf.com
     cs  - canstockphoto.com
+    dp  - depositphotos.com
