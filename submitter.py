@@ -5,6 +5,7 @@ import logging
 
 from typing import Tuple
 from selenium import webdriver
+from time import sleep
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -28,6 +29,7 @@ class Submitter():
             if self.check_captcha():
                 self.submit()
             self.driver.close()
+            click.echo('done')
               
         except Exception as ex:
             click.echo('Error, check tss.log')   
@@ -88,6 +90,7 @@ class Submitter():
         
         return False
 
+
 class CanStockSubmitter(Submitter):
     def __init__(self) -> None:
         super().__init__()
@@ -142,8 +145,8 @@ class CanStockSubmitter(Submitter):
                 
             btn_confirm = WebDriverWait(self.driver,10).until(EC.element_to_be_clickable((By.CLASS_NAME, 'btn-confirm')))                
             btn_confirm.click()
-    
-        
+
+            
 class DepositSubmitter(Submitter):
     def __init__(self) -> None:
         super().__init__()
@@ -177,24 +180,42 @@ class DepositSubmitter(Submitter):
                 
             elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
             qty_selected = elem_qty_selected.text
-            if int(qty_selected) > 0:
+            if qty_selected and int(qty_selected) > 0:
                 btn_submit = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/button[1]')
                 btn_submit.click()
+                self.waitUntilProcessed()
                 
                 # check invalid items
                 if self.check_invalid():
                     self.delete_invalid()
+            else:
+                break
     
     def check_invalid(self) -> bool:
         # If some of the items remains selected after submit - they are invalid
         WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="unfinished-editor"]/div/div/div[2]/div/button[1]')))
         elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
         qty_selected = elem_qty_selected.text
-        return int(qty_selected) > 0
-            
+        if qty_selected:
+            return int(qty_selected) > 0
+        else:
+            return False
         
     def delete_invalid(self) -> None:
-        pass
+        btn_delete = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/div[2]/i[1]')
+        btn_delete.click()
+        self.waitUntilProcessed()
+    
+    def waitUntilProcessed(self) -> None:
+        while True:
+            elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
+            text_amnt_selected = elem_qty_selected.text
+            elem_qty_all = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[2]')
+            text_amnt_all = elem_qty_all.text
+            if not text_amnt_selected or text_amnt_selected != text_amnt_all:
+                break
+            else:
+                sleep(1)    
         
 class DreamstimeSubmitter(Submitter):
     def __init__(self) -> None:
@@ -202,6 +223,7 @@ class DreamstimeSubmitter(Submitter):
         self.stock = 'dreamstime'
         self.login_page = 'https://www.dreamstime.com/'
         self.start_page = ''
+
         
 class One23Submitter(Submitter):
     def __init__(self) -> None:
@@ -303,7 +325,6 @@ class One23Submitter(Submitter):
         return len(items) > 0
 
         
-
 def create_submitter(stock:str) -> Submitter:
     if stock == '123':
         submitter = One23Submitter()
