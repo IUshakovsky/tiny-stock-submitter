@@ -306,25 +306,38 @@ class One23Submitter(Submitter):
              
     
     def check_unprocessed_left(self) -> bool:
-        # elem_select_all = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, '#select-all')))
-        # # driver.find_element_by_css_selector('#select-all')
-        # elem_select_all.click()
-            
-        # selected_cnt_elem = self.driver.find_element_by_xpath('//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]/b')
-        # selected_cnt = selected_cnt_elem.text
-        # if int(selected_cnt) == 0:
-        #     result = False
-        # else:
-        #     result = True
-        
-        # # Return previous unchecked state
-        # elem_select_all.click()
-        # return result
         WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="container-content-container-box"]/div/div[2]')))            
         items = self.driver.find_elements_by_xpath('//*[@id="manage-content-grid"]')
         return len(items) > 0
 
+
+class Pond5Submitter(Submitter):
+    def __init__(self) -> None:
+        super().__init__()
+        self.stock = 'pond5'
+        self.login_page = 'https://www.pond5.com/'
+        self.start_page = 'https://www.pond5.com/index.php?page=my_uploads'
+    
+    def authenticate(self, auth_data: Tuple) -> None:
+        super().authenticate(auth_data)
+        link_log_in = self.driver.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/a/span')
+        link_log_in.click()
         
+        elem_uname = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.ID, 'inputLoginModalLogin')))            
+        # elem_uname = self.driver.find_element_by_id('inputLoginModalLogin')
+        elem_uname.send_keys(auth_data[0])
+        
+        elem_passwd = self.driver.find_element_by_id('inputLoginModalPassword')
+        elem_passwd.send_keys(auth_data[1])
+        
+        elem_button = self.driver.find_element_by_xpath('//*[@id="loginSignupLightbox"]/div/div[3]/div/div[2]/button')
+        elem_button.click()
+        WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
+
+    def submit(self) -> None:
+        while True:
+            self.driver.get(self.start_page)
+    
 def create_submitter(stock:str) -> Submitter:
     if stock == '123':
         submitter = One23Submitter()
@@ -334,6 +347,8 @@ def create_submitter(stock:str) -> Submitter:
         submitter = DreamstimeSubmitter()
     elif stock == 'dp':
         submitter = DepositSubmitter()
+    elif stock == 'p5':
+        submitter = Pond5Submitter()
     else:
         submitter = None
     
