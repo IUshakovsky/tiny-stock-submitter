@@ -335,8 +335,16 @@ class Pond5Submitter(Submitter):
         WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
 
     def submit(self) -> None:
+        self.driver.get(self.start_page)
+
         while True:
-            self.driver.get(self.start_page)
+            cb_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[1]/div/label')))
+            ActionChains(self.driver).move_to_element(cb_select_all).click(cb_select_all).perform()
+            # cb_select_all.click()
+            
+            btn_submit = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[10]/input')))
+            ActionChains(self.driver).move_to_element(btn_submit).click(btn_submit).perform()
+            
     
 def create_submitter(stock:str) -> Submitter:
     if stock == '123':
