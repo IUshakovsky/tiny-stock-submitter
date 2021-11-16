@@ -295,8 +295,9 @@ class One23Submitter(Submitter):
                         img = item.find_element_by_xpath('./div/label/div[1]/img')
                         ActionChains(self.driver).move_to_element(img).click(img).perform()
                         # img.click()
-                bnt_delete = self.driver.find_element_by_xpath('//*[@id="delete-button"]')
-                bnt_delete.click()
+                btn_delete = self.driver.find_element_by_xpath('//*[@id="delete-button"]')
+                ActionChains(self.driver).move_to_element(btn_delete).click(btn_delete).perform()
+                # bnt_delete.click()
                 modal_elems = self.driver.find_elements_by_xpath('//*[@id="delete-content-modal"]/div[2]/button[2]')
                 if len(modal_elems) > 0:
                     modal_elems[0].click()
@@ -335,6 +336,9 @@ class Pond5Submitter(Submitter):
         WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
 
     def submit(self) -> None:
+        
+        # choice Need edits in dropdown
+        
         self.driver.get(self.start_page)
 
         while True:

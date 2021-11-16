@@ -12,8 +12,8 @@ def main(stock:str) -> None:
     Supported microstocks:
     123 - 123rf.com
     cs  - canstockphoto.com
-    dt  - dreamstime.com
     dp  - depositphotos.com
+    p5  - pond5.com
     """
 
     submitter = sb.create_submitter(stock)
@@ -21,4 +21,4 @@ def main(stock:str) -> None:
 
 if __name__ == "__main__":
     # main()    
-    main('p5') 
+    main('123') 
