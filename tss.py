@@ -21,4 +21,4 @@ def main(stock:str) -> None:
 
 if __name__ == "__main__":
     # main()    
-    main('123') 
+    main('dp') 

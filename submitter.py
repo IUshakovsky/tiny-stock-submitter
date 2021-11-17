@@ -10,16 +10,18 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import NoAlertPresentException
 
 
 class Submitter():
     def __init__(self) -> None:
         self.log = logging.getLogger('log')
         self.log.setLevel(logging.INFO)
-        file_handler = logging.FileHandler('./tss.log')
+        file_handler = logging.FileHandler(f'logs/tss.log')
         formatter = logging.Formatter('%(asctime)s:%(levelname)s:: %(message)s')
         file_handler.setFormatter(formatter)
         self.log.addHandler(file_handler)
+        self.log.info('==========START==========')
     
     def run(self) -> None:
         try:
@@ -176,6 +178,11 @@ class DepositSubmitter(Submitter):
             self.driver.get(self.start_page)
             
             elem_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="unfinished-editor"]/div/div/div[3]/div[1]/div/table/tbody/tr/th[1]/label/i')))
+            try:
+                self.driver.switch_to.alert.accept()
+            except Exception as e:
+                pass
+                
             elem_select_all.click()
                 
             elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
@@ -355,8 +362,8 @@ def create_submitter(stock:str) -> Submitter:
         submitter = One23Submitter()
     elif stock == 'cs':
         submitter = CanStockSubmitter()
-    elif stock == 'dt':
-        submitter = DreamstimeSubmitter()
+    # elif stock == 'dt':
+    #     submitter = DreamstimeSubmitter()
     elif stock == 'dp':
         submitter = DepositSubmitter()
     elif stock == 'p5':
