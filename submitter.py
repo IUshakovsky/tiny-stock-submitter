@@ -3,14 +3,14 @@ import keyring
 import json
 import logging
 
-from typing import Tuple
+from typing import List, Tuple
 from selenium import webdriver
 from time import sleep
+from re import findall
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
-from selenium.common.exceptions import NoAlertPresentException
 
 
 class Submitter():
@@ -343,19 +343,40 @@ class Pond5Submitter(Submitter):
         WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
 
     def submit(self) -> None:
-        
-        # choice Need edits in dropdown
-        
+                
         self.driver.get(self.start_page)
 
         while True:
             cb_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[1]/div/label')))
+            
+            self.check_invalid()
+            
             ActionChains(self.driver).move_to_element(cb_select_all).click(cb_select_all).perform()
             # cb_select_all.click()
             
             btn_submit = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[10]/input')))
             ActionChains(self.driver).move_to_element(btn_submit).click(btn_submit).perform()
-            
+ 
+    def check_invalid(self):
+        sel_area = self.driver.find_element_by_css_selector('#main > div > div:nth-child(3)')
+        errors_text_lst = findall(r'Error: .* Clip ID: \d*', sel_area.text)
+        if len(errors_text_lst) > 0:
+            error_ids = findall(r'Clip ID: (\d*)', errors_text_lst[0])
+            if len(error_ids) > 0:
+                self.delete_invalid(error_ids)
+        else:
+            pass
+    
+    def delete_invalid(self, error_ids: List[str]) -> None:
+        for id in error_ids:
+            wrong_items = self.driver.find_elements_by_partial_link_text(id)
+            if len(wrong_items) > 0:
+                # btn_bin = self.driver.find_element_by_xpath(f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")
+                btn_bin = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")))
+                btn_bin.click()
+                btn_delete = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[13]/div[3]/div/button[2]/span[text()='Delete']"))) 
+                btn_delete.click()
+                
     
 def create_submitter(stock:str) -> Submitter:
     if stock == '123':
