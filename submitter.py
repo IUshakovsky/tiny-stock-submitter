@@ -347,36 +347,47 @@ class Pond5Submitter(Submitter):
         self.driver.get(self.start_page)
 
         while True:
-            cb_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[1]/div/label')))
+            if len( self.driver.find_elements_by_xpath('//*[@id="main"]/div/div[3]/form/div[10]/input')) == 0:
+                break
             
+            cb_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[1]/div/label')))
             self.check_invalid()
             
-            ActionChains(self.driver).move_to_element(cb_select_all).click(cb_select_all).perform()
+            header_area = self.driver.find_element_by_xpath('//*[@id="main"]/div/div[1]/div/div[1]/div[2]')
+
+            ActionChains(self.driver).move_to_element(header_area).move_to_element(cb_select_all).click(cb_select_all).perform()
             # cb_select_all.click()
             
             btn_submit = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[10]/input')))
             ActionChains(self.driver).move_to_element(btn_submit).click(btn_submit).perform()
  
-    def check_invalid(self):
+    def check_invalid(self) -> None:
         sel_area = self.driver.find_element_by_css_selector('#main > div > div:nth-child(3)')
         errors_text_lst = findall(r'Error: .* Clip ID: \d*', sel_area.text)
-        if len(errors_text_lst) > 0:
-            error_ids = findall(r'Clip ID: (\d*)', errors_text_lst[0])
+        for error_text_line in errors_text_lst:
+            error_ids = findall(r'Clip ID: (\d*)', error_text_line)
             if len(error_ids) > 0:
                 self.delete_invalid(error_ids)
-        else:
-            pass
     
     def delete_invalid(self, error_ids: List[str]) -> None:
+        header_area = self.driver.find_element_by_xpath('//*[@id="main"]/div/div[1]/div/div[1]/div[2]')
         for id in error_ids:
             wrong_items = self.driver.find_elements_by_partial_link_text(id)
             if len(wrong_items) > 0:
-                # btn_bin = self.driver.find_element_by_xpath(f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")
                 btn_bin = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")))
-                btn_bin.click()
-                btn_delete = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[13]/div[3]/div/button[2]/span[text()='Delete']"))) 
-                btn_delete.click()
                 
+                ActionChains(self.driver).move_to_element(header_area).move_to_element(btn_bin).perform()
+                WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH, f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")))
+                btn_bin.click()
+                
+                ActionChains(self.driver).move_to_element(btn_bin).click(btn_bin).perform()
+                
+                btn_delete = WebDriverWait(self.driver,20).until(EC.presence_of_element_located((By.XPATH, "/html/body/div[13]/div[3]/div/button[2]/span[text()='Delete']"))) 
+                ActionChains(self.driver).move_to_element(btn_delete).click(btn_delete).perform()
+                
+                # Wait until it disapears
+                WebDriverWait(self.driver,10).until((EC.invisibility_of_element(btn_bin)))
+
     
 def create_submitter(stock:str) -> Submitter:
     if stock == '123':
