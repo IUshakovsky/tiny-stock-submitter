@@ -260,7 +260,8 @@ class One23Submitter(Submitter):
         '''
         while True:
             self.driver.get(self.start_page)
-            WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'), '0'))
+            selected_items_xpath = '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'
+            WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, selected_items_xpath), '0'))
                         
             if self.check_unprocessed_left():
                 self.delete_invalid()
@@ -268,7 +269,7 @@ class One23Submitter(Submitter):
                 break
             
             if self.check_unprocessed_left():
-                WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'), '0'))
+                WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, selected_items_xpath), '0'))
                 elem_select_all = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.CSS_SELECTOR, '#select-all')))
                 elem_select_all.click()
                 # elem_submit_btn = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'button#submit-draft-btn')))
@@ -343,11 +344,11 @@ class Pond5Submitter(Submitter):
         WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
 
     def submit(self) -> None:
-                
         self.driver.get(self.start_page)
+        btn_submit_xpath = '//*[@id="main"]/div/div[3]/form/div[10]/input'
 
         while True:
-            if len( self.driver.find_elements_by_xpath('//*[@id="main"]/div/div[3]/form/div[10]/input')) == 0:
+            if len( self.driver.find_elements_by_xpath(btn_submit_xpath)) == 0:
                 break
             
             cb_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[1]/div/label')))
@@ -358,7 +359,7 @@ class Pond5Submitter(Submitter):
             ActionChains(self.driver).move_to_element(header_area).move_to_element(cb_select_all).click(cb_select_all).perform()
             # cb_select_all.click()
             
-            btn_submit = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[10]/input')))
+            btn_submit = WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH,btn_submit_xpath)))
             ActionChains(self.driver).move_to_element(btn_submit).click(btn_submit).perform()
  
     def check_invalid(self) -> None:
@@ -372,12 +373,13 @@ class Pond5Submitter(Submitter):
     def delete_invalid(self, error_ids: List[str]) -> None:
         header_area = self.driver.find_element_by_xpath('//*[@id="main"]/div/div[1]/div/div[1]/div[2]')
         for id in error_ids:
+            btn_bin_xpath = f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div"
             wrong_items = self.driver.find_elements_by_partial_link_text(id)
             if len(wrong_items) > 0:
-                btn_bin = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")))
+                btn_bin = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, btn_bin_xpath)))
                 
                 ActionChains(self.driver).move_to_element(header_area).move_to_element(btn_bin).perform()
-                WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH, f"//a[@class='p5_delete_item_btn u-isActionable' and @data-item-id='{id}']/div")))
+                WebDriverWait(self.driver,15).until(EC.element_to_be_clickable((By.XPATH, btn_bin_xpath)))
                 btn_bin.click()
                 
                 ActionChains(self.driver).move_to_element(btn_bin).click(btn_bin).perform()
