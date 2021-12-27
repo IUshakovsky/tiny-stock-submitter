@@ -11,7 +11,13 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
+from selenium.common.exceptions import UnexpectedAlertPresentException
 
+# TODO:
+# 1. Pond5: changed login page source - fix
+# 2. Deposit - handle alert in sumbit()
+# 3. Pond/Dep? last page handling - some issue, don't remember...
+# 4. Captcha 
 
 class Submitter():
     def __init__(self) -> None:
@@ -175,28 +181,32 @@ class DepositSubmitter(Submitter):
         
     def submit(self) -> None:
         while True:
-            self.driver.get(self.start_page)
-            
-            elem_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="unfinished-editor"]/div/div/div[3]/div[1]/div/table/tbody/tr/th[1]/label/i')))
             try:
+                self.driver.get(self.start_page)
+
+                elem_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="unfinished-editor"]/div/div/div[3]/div[1]/div/table/tbody/tr/th[1]/label/i')))
+                    
+                elem_select_all.click()
+                    
+                elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
+                qty_selected = elem_qty_selected.text
+                if qty_selected and int(qty_selected) > 0:
+                    btn_submit = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/button[1]')
+                    btn_submit.click()
+                    self.waitUntilProcessed()
+                    
+                    # check invalid items
+                    if self.check_invalid():
+                        self.delete_invalid()
+                else:
+                    break
+
+            except UnexpectedAlertPresentException as e:
+                print(f'Exception catched:', e)
                 self.driver.switch_to.alert.accept()
-            except Exception as e:
-                pass
-                
-            elem_select_all.click()
-                
-            elem_qty_selected = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/span/span[1]')
-            qty_selected = elem_qty_selected.text
-            if qty_selected and int(qty_selected) > 0:
-                btn_submit = self.driver.find_element_by_xpath('//*[@id="unfinished-editor"]/div/div/div[2]/div/button[1]')
-                btn_submit.click()
-                self.waitUntilProcessed()
-                
-                # check invalid items
-                if self.check_invalid():
-                    self.delete_invalid()
-            else:
-                break
+            
+
+
     
     def check_invalid(self) -> bool:
         # If some of the items remains selected after submit - they are invalid
@@ -328,8 +338,9 @@ class Pond5Submitter(Submitter):
         self.start_page = 'https://www.pond5.com/index.php?page=my_uploads'
     
     def authenticate(self, auth_data: Tuple) -> None:
-        super().authenticate(auth_data)
-        link_log_in = self.driver.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/a/span')
+        super().authenticate(auth_data) # /html/body/header/div/div[4]/div[4]/span  
+        link_log_in = self.driver.find_element_by_xpath('/html/body/header/div/div[4]/div[4]/span')
+        # link_log_in = self.driver.find_element_by_xpath('//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/a/span')
         link_log_in.click()
         
         elem_uname = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.ID, 'inputLoginModalLogin')))            
@@ -341,7 +352,11 @@ class Pond5Submitter(Submitter):
         
         elem_button = self.driver.find_element_by_xpath('//*[@id="loginSignupLightbox"]/div/div[3]/div/div[2]/button')
         elem_button.click()
-        WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
+        
+        elem_ava_xpath = '/html/body/header/div/div[4]/div[5]/div[1]/a/img'
+        # WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, '//*[@id="main"]/div[2]/div[2]/div/nav/div[1]/div[8]/div[1]/a/img')))
+        WebDriverWait(self.driver,15).until(EC.presence_of_all_elements_located((By.XPATH, elem_ava_xpath)))
+
 
     def submit(self) -> None:
         self.driver.get(self.start_page)
@@ -350,6 +365,10 @@ class Pond5Submitter(Submitter):
         while True:
             if len( self.driver.find_elements_by_xpath(btn_submit_xpath)) == 0:
                 break
+            
+            # //*[@id="main"]/div/div[3]/form/div[9]/input
+            # main > div > div:nth-child(3) > form > div:nth-child(11) > input
+            # main > div > div:nth-child(3) > form > div:nth-child(12) > input            
             
             cb_select_all = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH,'//*[@id="main"]/div/div[3]/form/div[1]/div/label')))
             self.check_invalid()
