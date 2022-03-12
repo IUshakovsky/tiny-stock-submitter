@@ -1,4 +1,4 @@
-Tiny stock submitter - simple tool to submit uploaded content to microstocks using selenium webdriver (and Chrome)
+Tiny stock submitter - CLI tool to submit uploaded content to microstocks using selenium webdriver for Googe Chrome
 
     Supported microstocks:
     123 - 123rf.com

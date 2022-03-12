@@ -13,11 +13,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import UnexpectedAlertPresentException
 
-# TODO:
-# 1. Pond5: changed login page source - fix
-# 2. Deposit - handle alert in sumbit()
-# 3. Pond/Dep? last page handling - some issue, don't remember...
-# 4. Captcha 
 
 class Submitter():
     def __init__(self) -> None:
