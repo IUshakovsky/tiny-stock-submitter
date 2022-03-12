@@ -5,3 +5,5 @@ Tiny stock submitter - CLI tool to submit uploaded content to microstocks using 
     cs  - canstockphoto.com
     dp  - depositphotos.com
     p5  - pond5.com
+
+Usage: tss.py [OPTIONS] STOCK
