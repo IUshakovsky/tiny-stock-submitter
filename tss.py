@@ -2,8 +2,8 @@ import click
 
 import submitter as sb
 
-@click.command()
-@click.argument('stock')
+# @click.command()
+# @click.argument('stock')
 def main(stock:str) -> None:
     """Tiny stock submitter - simple tool to submit uploaded content to microstocks 
     using selenium webdriver
@@ -20,4 +20,4 @@ def main(stock:str) -> None:
     submitter.run()
 
 if __name__ == "__main__":
-    main()   
+    main('123')   

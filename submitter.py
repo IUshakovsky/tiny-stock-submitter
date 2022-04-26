@@ -1,5 +1,4 @@
 import click
-import keyring
 import json
 import logging
 
@@ -41,30 +40,42 @@ class Submitter():
     
     def get_auth_data(self) -> Tuple:
         login = self.get_login()
-        passwd = keyring.get_password(self.stock, login)
+        # passwd = keyring.get_password(self.stock, login)
+        passwd = self.get_passwd()
         if not passwd:
-            passwd = self.set_passwd(login)
+            passwd = self.set_passwd()
         return (login,passwd)
             
     def get_login(self) -> str:
-        with open('tss.json') as conf_file:
+        with open('.tss.json') as conf_file:
             self.config = json.load(conf_file)
-         
         if self.stock in self.config:  
-            return self.config[self.stock]
+            return self.config[self.stock]['login']
         else:
             return self.set_login()
+
+    def get_passwd(self) -> str:
+        with open('.tss.json') as conf_file:
+            self.config = json.load(conf_file)
+        if self.stock in self.config and 'passwd' in self.config[self.stock]:  
+            return self.config[self.stock]['passwd']
+        else:
+            return self.set_passwd()
     
     def set_login(self) -> str:
         new_login = click.prompt(f'Enter login')
-        self.config[self.stock] = new_login
-        with open('tss.json','w') as conf_file:
+        self.config[self.stock] = {}
+        self.config[self.stock]['login'] = new_login
+        with open('.tss.json','w') as conf_file:
             json.dump(self.config, conf_file)    
         return new_login
     
-    def set_passwd(self, login:str) -> str:
+    def set_passwd(self) -> str:
         passwd = click.prompt(f'Enter password',hide_input=True)
-        keyring.set_password(self.stock, login, passwd)
+        # keyring.set_password(self.stock, login, passwd)
+        self.config[self.stock]['passwd'] = passwd
+        with open('.tss.json','w') as conf_file:
+            json.dump(self.config, conf_file)    
         return passwd
     
     def authenticate(self, auth_data:Tuple) -> None:
