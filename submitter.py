@@ -131,10 +131,18 @@ class CanStockSubmitter(Submitter):
             self.delete_invalid()
             
             self.driver.get(self.start_page)
-            elem_checkbox = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.XPATH, '//*[@id="accept"]')))
+            
+            elem_checkbox = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="accept"]')))
+            elem_submit_btn = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'span.btn.btn-lg.btn-csp-orange.btn-submit')))
+
+            ActionChains(self.driver).move_to_element(elem_submit_btn).perform()
+            sleep(1)
             elem_checkbox.click()
             
-            elem_submit_btn = WebDriverWait(self.driver,10).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'span.btn.btn-lg.btn-csp-orange.btn-submit')))
+            # elem_checkbox = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.XPATH, '//*[@id="accept"]')))
+            # elem_checkbox.click()
+            
+            # elem_submit_btn = WebDriverWait(self.driver,15).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'span.btn.btn-lg.btn-csp-orange.btn-submit')))
             if 'disabled' in elem_submit_btn.get_attribute('class'):
                 break
             

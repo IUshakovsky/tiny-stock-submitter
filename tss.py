@@ -20,4 +20,4 @@ def main(stock:str) -> None:
     submitter.run()
 
 if __name__ == "__main__":
-    main('123')   
+    main('cs')   
