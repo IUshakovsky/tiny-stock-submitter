@@ -148,8 +148,15 @@ class CanStockSubmitter(Submitter):
             
             elem_submit_btn.click()
             self.check_captcha()
+            self.check_forbidden_content_dialog()
             
-    
+    def check_forbidden_content_dialog(self) -> None:
+        try:
+            elem_btn_submit_anyway = WebDriverWait(self.driver,5).until(EC.presence_of_element_located((By.XPATH, '/html/body/div[3]/div/div/div[3]/button[1]')))
+            elem_btn_submit_anyway.click()
+        except:
+            pass
+                
     def delete_invalid(self) -> None:
         ''' Remove invalid items by expanding info area and clicking Recycle button
         '''
@@ -284,7 +291,8 @@ class One23Submitter(Submitter):
         '''
         while True:
             self.driver.get(self.start_page)
-            selected_items_xpath = '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'
+            # selected_items_xpath = '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/span[1]'
+            selected_items_xpath = '//*[@id="container-content-container-box"]/div/div[2]/div/div/div/div/div[1]/div[2]/div/div[1]/span[1]'
             WebDriverWait(self.driver,15).until(EC.text_to_be_present_in_element((By.XPATH, selected_items_xpath), '0'))
                         
             if self.check_unprocessed_left():
